@@ -18,85 +18,102 @@
 
 using namespace std;
 
-namespace CJCU {
+namespace CJCU
+{
 
 int Pattern::GetPattern()
- {
-	int index0, index1, index2, index3;
+{
+	int code0, code1, code2, code3;
 
 	//讀取3X3棋形
-	ifstream f3in("pattern_3.txt",ios::in);
+	ifstream f3in("pattern_3.txt", ios::in);
 
 	if (!f3in.is_open())
 	{
 		return false;
 	}
 
-	f3in >> index0;
+	f3in >> code0;
 
-	do
+	while (code0 != -1)
 	{
-		Patterns_3[index0] = true;
-		f3in >> index0;
-	} while  (index0 == -1);
+		Patterns_3[code0] = true;
+		f3in >> code0;
+	}
 
 	f3in.close();
 
 	//讀取5X5棋形(black)
-	ifstream f5bin("pattern_5b.txt",ios::in);
+	ifstream f5bin("pattern_5b.txt", ios::in);
 
 	if (!f5bin.is_open())
 	{
 		return false;
 	}
 
-	f5bin >> index0 >> index1 >> index2 >> index3;
+	f5bin >> code0 >> code1 >> code2 >> code3;
 
-	do
+	while (code0 != -1)
 	{
-		Patterns_5b[0][index0] = true;
-		Patterns_5b[1][index1] = true;
-		Patterns_5b[2][index2] = true;
-		Patterns_5b[3][index3] = true;
-		f5bin >> index0 >> index1 >> index2 >> index3;
-	} while  (index0 == -1);
+		stringstream ss;
+
+		ss << code0;
+		ss << " " + code1;
+		ss << " " + code2;
+		ss << " " + code3;
+
+		string key;
+		key = ss.str();
+
+		Pattern5b.insert(key);
+
+		f5bin >> code0 >> code1 >> code2 >> code3;
+	}
 
 	f5bin.close();
 
 	//讀取5X5棋形(white)
-	ifstream f5win("pattern_5w.txt",ios::in);
+	ifstream f5win("pattern_5w.txt", ios::in);
 
 	if (!f5win.is_open())
 	{
 		return false;
 	}
 
-	f5win >> index0 >> index1 >> index2 >> index3;
+	f5win >> code0 >> code1 >> code2 >> code3;
 
-	do
+	while (code0 != -1)
 	{
-		Patterns_5w[0][index0] = true;
-		Patterns_5w[1][index1] = true;
-		Patterns_5w[2][index2] = true;
-		Patterns_5w[3][index3] = true;
-		f5win >> index0 >> index1 >> index2 >> index3;
-	} while  (index0 == -1);
+		stringstream ss;
+
+		ss << code0;
+		ss << " " + code1;
+		ss << " " + code2;
+		ss << " " + code3;
+
+		string key;
+		key = ss.str();
+
+		Pattern5w.insert(key);
+
+		f5win >> code0 >> code1 >> code2 >> code3;
+	}
 
 	f5win.close();
 
 	//讀取黑棋棋譜
-	ifstream finb("black_book.txt",ios::in); // open file
+	ifstream finb("black_book.txt", ios::in); // open file
 
 	if (!finb.is_open())
 	{
 		return false;
 	}
 
-    while (true)
+	while (true)
 	{
 		stringstream ss1, ss2;
 
-		for (int j=0; j<RealBoardSize; j++)
+		for (int j = 0; j < RealBoardSize; j++)
 		{
 			long long subcode;
 			if (!(finb >> subcode)) // is there any record?
@@ -112,37 +129,33 @@ int Pattern::GetPattern()
 		finb >> val;
 		ss2 << val;
 
-		map<string,string>::iterator iter;
-	    iter = Black_Book.find(key);
-	    if (iter != Black_Book.end())
-	    {
-	    	Black_Book[key] = iter->second + " " + ss2.str();
-	    }
-	    else
-	    {
-	    	Black_Book[key] = ss2.str();
-	    }
+		map<string, string>::iterator iter;
+		iter = Black_Book.find(key);
+		if (iter != Black_Book.end())
+		{
+			Black_Book[key] = iter->second + " " + ss2.str();
+		}
+		else
+		{
+			Black_Book[key] = ss2.str();
+		}
 	}
 
-BL:	finb.close();
+	BL: finb.close();
 
 	//讀取白棋棋譜
-	ifstream finw("white_book.txt",ios::in);
+	ifstream finw("white_book.txt", ios::in);
 
-	if (!finw.is_open())
-	{
+	if (!finw.is_open()) {
 		return false;
 	}
 
-	while (true)
-	{
+	while (true) {
 		stringstream ss1, ss2;
 
-		for (int j=0; j<RealBoardSize; j++)
-		{
+		for (int j = 0; j < RealBoardSize; j++) {
 			long long subcode;
-			if (!(finw >> subcode))
-			{
+			if (!(finw >> subcode)) {
 				goto WL;
 			}
 			ss1 << subcode;
@@ -154,103 +167,88 @@ BL:	finb.close();
 		finw >> val;
 		ss2 << val;
 
-		map<string,string>::iterator iter;
-	    iter = White_Book.find(key);
-	    if (iter != White_Book.end())
-	    {
-	    	White_Book[key] = iter->second + " " + ss2.str();
-	    }
-	    else
-	    {
-	    	White_Book[key] = ss2.str();
-	    }
+		map<string, string>::iterator iter;
+		iter = White_Book.find(key);
+		if (iter != White_Book.end()) {
+			White_Book[key] = iter->second + " " + ss2.str();
+		} else {
+			White_Book[key] = ss2.str();
+		}
 	}
 
-WL:	finw.close();
+	WL: finw.close();
 
 //讀取黑棋定石
-ifstream finbj("black_joseki.txt",ios::in); // open file
+	ifstream finbj("black_joseki.txt", ios::in); // open file
 
-if (!finbj.is_open())
-{
-	return false;
-}
-
-while (true)
-{
-	stringstream ss1, ss2;
-
-	for (int j=0; j<JosekiSize; j++)
-	{
-		long long subcode;
-		if (!(finbj >> subcode)) // is there any record?
-		{
-			goto BJ;
-		}
-		ss1 << subcode;
+	if (!finbj.is_open()) {
+		return false;
 	}
-	string key;
-	key = ss1.str();
 
-	int val;
-	finbj >> val;
-	ss2 << val;
+	while (true) {
+		stringstream ss1, ss2;
 
-	map<string,string>::iterator iter;
-    iter = Black_Joseki.find(key);
-    if (iter != Black_Joseki.end())
-    {
-    	Black_Joseki[key] = iter->second + " " + ss2.str();
-    }
-    else
-    {
-    	Black_Joseki[key] = ss2.str();
-    }
-}
+		for (int j = 0; j < JosekiSize; j++) {
+			long long subcode;
+			if (!(finbj >> subcode)) // is there any record?
+			{
+				goto BJ;
+			}
+			ss1 << subcode;
+		}
+		string key;
+		key = ss1.str();
 
-BJ:	finbj.close();
+		int val;
+		finbj >> val;
+		ss2 << val;
+
+		map<string, string>::iterator iter;
+		iter = Black_Joseki.find(key);
+		if (iter != Black_Joseki.end()) {
+			Black_Joseki[key] = iter->second + " " + ss2.str();
+		} else {
+			Black_Joseki[key] = ss2.str();
+		}
+	}
+
+	BJ: finbj.close();
 
 //讀取白棋定石
-ifstream finwj("white_joseki.txt",ios::in); // open file
+	ifstream finwj("white_joseki.txt", ios::in); // open file
 
-if (!finwj.is_open())
-{
-	return false;
-}
-
-while (true)
-{
-	stringstream ss1, ss2;
-
-	for (int j=0; j<JosekiSize; j++)
-	{
-		long long subcode;
-		if (!(finwj >> subcode)) // is there any record?
-		{
-			goto WJ;
-		}
-		ss1 << subcode;
+	if (!finwj.is_open()) {
+		return false;
 	}
-	string key;
-	key = ss1.str();
 
-	int val;
-	finwj >> val;
-	ss2 << val;
+	while (true) {
+		stringstream ss1, ss2;
 
-	map<string,string>::iterator iter;
-    iter = White_Joseki.find(key);
-    if (iter != White_Joseki.end())
-    {
-    	White_Joseki[key] = iter->second + " " + ss2.str();
-    }
-    else
-    {
-    	White_Joseki[key] = ss2.str();
-    }
-}
+		for (int j = 0; j < JosekiSize; j++) {
+			long long subcode;
+			if (!(finwj >> subcode)) // is there any record?
+			{
+				goto WJ;
+			}
+			ss1 << subcode;
+		}
+		string key;
+		key = ss1.str();
 
-WJ:	finwj.close();
+		int val;
+		finwj >> val;
+		ss2 << val;
+
+		map<string, string>::iterator iter;
+		iter = White_Joseki.find(key);
+		if (iter != White_Joseki.end()) {
+			White_Joseki[key] = iter->second + " " + ss2.str();
+		} else {
+			White_Joseki[key] = ss2.str();
+		}
+	}
+
+	WJ: finwj.close();
 
 	return true;
 }

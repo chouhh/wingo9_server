@@ -33,6 +33,9 @@ bool Patterns_3[PATTERN_LIMIT] = {0};
 bool Patterns_5b[4][PATTERN_LIMIT] = {{0}};
 bool Patterns_5w[4][PATTERN_LIMIT] = {{0}};
 
+set<string> Pattern5b;
+set<string> Pattern5w;
+
 map<string,string> Black_Book;
 map<string,string> White_Book;
 
