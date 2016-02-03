@@ -456,7 +456,7 @@ int gtp_play_move(string sn)
 int gtp_com_play(string sn)
 {
 	float winrate = 0;
-	int m, MSQ[M_Sequence_Limit] = {0}; // move & move sequence
+	int m = 0, MSQ[M_Sequence_Limit] = {0}; // move & move sequence
 	int hn = b->get_hand_num(); 		// hand number
 	int num_open_moves = 0, open_moves[300] = {0};
 	int num_joseki_moves = 0, joseki_moves[300] = {0};

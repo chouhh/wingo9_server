@@ -86,7 +86,7 @@ public:
 	int num_all_friends(int p);			//某一點的8個方位全部同色棋子的數量(new)
 	int num_adj_edge(int p);			//某一點周遭的邊界數量，角:2個、邊:1個、中間:0個(new)
 	int hashcode_pattern3(int p);
-	int hashcode_pattern5(int p, int *pattern_code);
+	int hashcode_pattern5(int p, string *pattern_code);
 	int distance(int p1, int p2);
 };
 

@@ -9,6 +9,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <sstream>
 #include <ctime>
 #include <cstdlib>
 
@@ -247,6 +248,7 @@ int Board::select_Move(int hn)
 	}
 
  	int total_urgency = 0, pattern_code3 = 0;
+ 	string pattern_code5;
 	int Urgency_Moves[BoardArraySize] = {0}; 	// 每一點的緊急值都先預設為0
 	int is_Legal_Moves[BoardArraySize] = {0};
 	int pattern_score, extension_score, capture_score, distance_score;
@@ -298,13 +300,35 @@ int Board::select_Move(int hn)
     {
     	if (Urgency_Moves[LegalMoves[i]] == 0)
     	{
-    		// Pattern match
+    		// Pattern 3 match
     		pattern_code3 = hashcode_pattern3(LegalMoves[i]);
 
     		if (Patterns_3[pattern_code3])
     		{
     			Urgency_Moves[LegalMoves[i]] += pattern_score;
     			total_urgency += pattern_score;
+    		}
+
+    		// Pattern 5 match
+    		hashcode_pattern5(LegalMoves[i], &pattern_code5);
+    		set<string>::iterator it;
+    		if (color == BLACK)
+    		{
+    			it = Pattern5b.find(pattern_code5);
+    			if (it != Pattern5b.end())
+    			{
+    				Urgency_Moves[LegalMoves[i]] += pattern_score * 6 / 5;
+    				total_urgency += pattern_score * 6 / 5;
+    			}
+    		}
+    		else
+    		{
+    			it = Pattern5w.find(pattern_code5);
+    			if (it != Pattern5w.end())
+    			{
+    				Urgency_Moves[LegalMoves[i]] += pattern_score * 6 / 5;
+    				total_urgency += pattern_score * 6 / 5;
+    			}
     		}
 
         	if ((hn > 1) && (last_move != 0) && (distance(LegalMoves[i], last_move) <= 4))
@@ -344,6 +368,7 @@ int Board::select_urgency_moves(int *moves)
 	}
 
  	int pattern_code3 = 0;
+ 	string pattern_code5;
 	int Urgency_Moves[BoardArraySize] = {0};
 	int is_Legal_Moves[BoardArraySize] = {0};
 
@@ -378,13 +403,35 @@ int Board::select_urgency_moves(int *moves)
     {
     	if (Urgency_Moves[LegalMoves[i]] == 0)
     	{
-    		// Pattern match
+    		// Pattern 3 match
     		pattern_code3 = hashcode_pattern3(LegalMoves[i]);
 
     		if (Patterns_3[pattern_code3])
     		{
     			Urgency_Moves[LegalMoves[i]] = 1;
     			continue;
+    		}
+
+    		// Pattern 5 match
+    		hashcode_pattern5(LegalMoves[i], &pattern_code5);
+    		set<string>::iterator it;
+    		if (color == BLACK)
+    		{
+    			it = Pattern5b.find(pattern_code5);
+    			if (it != Pattern5b.end())
+    			{
+    				Urgency_Moves[LegalMoves[i]] = 1;
+    				continue;
+    			}
+    		}
+    		else
+    		{
+    			it = Pattern5w.find(pattern_code5);
+    			if (it != Pattern5w.end())
+    			{
+    				Urgency_Moves[LegalMoves[i]] = 1;
+    				continue;
+    			}
     		}
 
         	if ((hand_num > 1) && (last_move != PASS) && (distance(LegalMoves[i], last_move) <= 4))
@@ -1006,54 +1053,61 @@ int Board::hashcode_pattern3(int p)
 	return pattern_code;
 }
 
-int Board::hashcode_pattern5(int p, int *pattern_code)
+int Board::hashcode_pattern5(int p, string *pattern_code)
 {
-	pattern_code[0] = 0;
-	pattern_code[1] = 0;
-	pattern_code[2] = 0;
+	int code[4] = {0,0,0,0};
 
 	int x = p % BoardSize;
 	int y = p / BoardSize;
 
-	pattern_code[0] = hashcode_pattern3(p);
+	code[0] = hashcode_pattern3(p);
 
 	if ((x > 1)&&(x < 9) && (y > 1) && (y < 9))
 	{
 		for (int j=0; j < 8; j++)
 		{
-			pattern_code[1] = pattern_code[1] << 2;
+			code[1] = code[1] << 2;
 			switch (board[p + extend_dir[j]])
 			{
 			case BLACK:
-				pattern_code[1] += 1;
+				code[1] += 1;
 				break;
 			case WHITE:
-				pattern_code[1] += 2;
+				code[1] += 2;
 				break;
 			case EDGE:
-				pattern_code[1] += 3;
+				code[1] += 3;
 				break;
 			}
 		}
 
 		for (int j=8; j < 16; j++)
 		{
-			pattern_code[2] = pattern_code[2] << 2;
+			code[2] = code[2] << 2;
 			switch (board[p + extend_dir[j]])
 			{
 			case BLACK:
-				pattern_code[2] += 1;
+				code[2] += 1;
 				break;
 			case WHITE:
-				pattern_code[2] += 2;
+				code[2] += 2;
 				break;
 			case EDGE:
-				pattern_code[2] += 3;
+				code[2] += 3;
 				break;
 			}
 		}
 
-		pattern_code[3] = (pattern_code[0] + pattern_code[1]*16 + pattern_code[2]*256) % 65536;
+		code[3] = (code[0] + code[1]*16 + code[2]*256) % 65536;
+
+		stringstream ss;
+
+		ss << code[0];
+		ss << " " + code[1];
+		ss << " " + code[2];
+		ss << " " + code[3];
+
+		*pattern_code = ss.str();
 
 		return 1;
 	}
