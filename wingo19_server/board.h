@@ -22,12 +22,14 @@ namespace CJCU
 class Board
 {
 private:
-	int central_points[BoardArraySize];
 	int num_LegalMoves; 					// 合法著點總數
+	int num_bLegalMoves;
+	int num_wLegalMoves;
 	int KO_point; 							// 劫點位置，若為0代表無劫點
 	int color; 								// 目前輪到的顏色
 	int hand_num; 							// 目前手數
 	float komi; 							// 貼目，一般為7.5
+	bool renew_legal;
 
 	GO_String strings[MAXSTRNUM]; 			// 儲存盤面上的棋串
 
@@ -45,7 +47,9 @@ private:
 public:
 	int last_move;
 	int board[BoardArraySize];     			// 目前盤面
-	int LegalMoves[BoardArraySize];
+	int *LegalMoves;
+	int bLegalMoves[RealBoardSize * RealBoardSize];
+	int wLegalMoves[RealBoardSize * RealBoardSize];
 
 	Board();
 	Board(Board* b);
@@ -65,12 +69,16 @@ public:
 	void decide_Liberty(int p, int c, int *num, int* detect, int* lp); // 計算點p所在棋串的氣數(0,1,2)
 	void flip_Color();
 	void capture_String(int t); 		// 提取string s的所有棋子並更改sn、next
-	void remove_Legal(int p);
+	void remove_Legal(int num_moves, int *moves, int p);
 
 	bool is_Legal(int p); 			// 判斷此點是否為合法點
+	bool is_Legal(int p, int c); 			// 判斷此點是否為合法點
 	bool is_Suicide(int p); 			// 判斷以next_color落子於此點是否為自殺
+	bool is_Suicide(int p, int c); 			// 判斷以next_color落子於此點是否為自殺
 	bool is_Eye(int p);				// 點p是否為(暫時)眼(new)
+	bool is_Eye(int p, int c);				// 點p是否為(暫時)眼(new)
 	bool is_TrueEye(int p); 				// 點p是否為眼
+	bool is_TrueEye(int p, int c); 				// 點p是否為眼
 
 	void get_Board(int nb[BoardArraySize]);
 	void get_String(GO_String s[MAXSTRNUM]);
@@ -85,6 +93,7 @@ public:
 	int num_adj_friends(int p);
 	int num_all_friends(int p);			//某一點的8個方位全部同色棋子的數量(new)
 	int num_adj_edge(int p);			//某一點周遭的邊界數量，角:2個、邊:1個、中間:0個(new)
+	int get_adj_empty_points(int p, int *points);
 	int hashcode_pattern3(int p);
 	int hashcode_pattern5(int p, string *pattern_code);
 	int distance(int p1, int p2);

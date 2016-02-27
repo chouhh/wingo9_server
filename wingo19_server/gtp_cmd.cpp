@@ -376,7 +376,7 @@ int gtp_name(string sn)
 // 設定程式版本
 int gtp_version(string sn)
 {
-	return GTP_Response("1.0", GTP_SUCCESS);
+	return GTP_Response("0.1", GTP_SUCCESS);
 }
 
 //分散UCT
@@ -468,7 +468,7 @@ int gtp_com_play(string sn)
 		LeftTime = Main_Time;
 	}
 
-	if (LeftTime <=  60)
+	if (LeftTime <=  180)
 	{
 		MaxSimulation = Simulation_Limit / 10;
 	}
@@ -514,10 +514,17 @@ int gtp_com_play(string sn)
 
 					b->get_Move_Sequence(MSQ);
 
-					if ((m = ParallelUCT(hn, c, MSQ)) == 404)
+					if (Mode == 1)
 					{
 						m = UCTSearch(MSQ, hn, &winrate);
-						fout << "Parallel UCT fail!" << endl;
+					}
+					else
+					{
+						if ((m = ParallelUCT(hn, c, MSQ)) == 404)
+						{
+							m = UCTSearch(MSQ, hn, &winrate);
+							fout << "Parallel UCT fail!" << endl;
+						}
 					}
 				}
 			}
@@ -548,10 +555,17 @@ int gtp_com_play(string sn)
 
 			b->get_Move_Sequence(MSQ);
 
-			if ((m = ParallelUCT(hn, c, MSQ)) == 404)
+			if (Mode == 1)
 			{
 				m = UCTSearch(MSQ, hn, &winrate);
-				fout << "Parallel UCT fail!" << endl;
+			}
+			else
+			{
+				if ((m = ParallelUCT(hn, c, MSQ)) == 404)
+				{
+					m = UCTSearch(MSQ, hn, &winrate);
+					fout << "Parallel UCT fail!" << endl;
+				}
 			}
 		}
 	}
@@ -562,10 +576,17 @@ int gtp_com_play(string sn)
 
 		b->get_Move_Sequence(MSQ);
 
-		if ((m = ParallelUCT(hn, c, MSQ)) == 404)
+		if (Mode == 1)
 		{
-			fout << "Parallel UCT fail!" << endl;
 			m = UCTSearch(MSQ, hn, &winrate);
+		}
+		else
+		{
+			if ((m = ParallelUCT(hn, c, MSQ)) == 404)
+			{
+				fout << "Parallel UCT fail!" << endl;
+				m = UCTSearch(MSQ, hn, &winrate);
+			}
 		}
 	}
 

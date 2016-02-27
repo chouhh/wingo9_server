@@ -40,10 +40,11 @@ void create_Tree(Node *r, Board *b, int hn)
 {
 	r->add_Visits();
 
-	if (hn < 120)
+	if (hn < 200)
 	{
 		int moves[BoardArraySize] = {0};
 		int num_moves = b->select_urgency_moves(moves);
+
 		if (num_moves > 0)
 		{
 			r->create_Children(moves, num_moves, b->get_color(), hn);
@@ -140,7 +141,7 @@ void get_NodeSequence(Node *G_root, Board *b, Node** Node_Sequence, int *Max_Lev
 			{
 				if (b->get_LegalNum() != 0)
 				{
-					if (b->get_hand_num() < 120)
+					if (b->get_hand_num() < 200)
 					{
 						int moves[BoardArraySize] = {0};
 						int num_moves = b->select_urgency_moves(moves);

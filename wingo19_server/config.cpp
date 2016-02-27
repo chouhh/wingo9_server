@@ -18,20 +18,18 @@ int extend_dir[16] = {-2*BoardSize-2 , -2*BoardSize-1 , -2*BoardSize, -2*BoardSi
 		-BoardSize-2  , -BoardSize+2  , -2 , 2 , BoardSize-2 , BoardSize+2, 2*BoardSize-2, 2*BoardSize-1,
 		2*BoardSize, 2*BoardSize+1, 2*BoardSize+2};
 
-int MaxSimulation = 200; // UCT模擬盤數限制
-int Simulation_Limit = 200;
+int MaxSimulation = 500; // UCT模擬盤數限制
+int Simulation_Limit = 500;
 
 int Pattern_Urgency = 110; // 棋形
 int Capture_Urgency = 115; // 攻擊
 int Extension_Urgency = 105; // 逃跑
-int Distance_Urgency = 100; // 當下落子附近的緊急值
+int Distance_Urgency = 20; // 當下落子附近的緊急值
 
 float UCT_Komi = 7.5; // 貼目數
 int ExEValue  = 7; // UCB公式的參數
 
 bool Patterns_3[PATTERN_LIMIT] = {0};
-bool Patterns_5b[4][PATTERN_LIMIT] = {{0}};
-bool Patterns_5w[4][PATTERN_LIMIT] = {{0}};
 
 set<string> Pattern5b;
 set<string> Pattern5w;

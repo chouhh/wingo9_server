@@ -2,7 +2,7 @@
  * board.cpp
  *
  * Created on: 2013/8/2
- * Modified on: 2015/10/10
+ * Modified on: 2016/2/27
  * Author: sjean
  */
 
@@ -42,7 +42,8 @@ Board::Board()
 	memset(next_string_stone, 0, sizeof(next_string_stone));
 
 	memset(max_adj_stones, 0, sizeof(max_adj_stones));
-	memset(LegalMoves, 0, sizeof(LegalMoves));
+	memset(bLegalMoves, 0, sizeof(bLegalMoves));
+	memset(wLegalMoves, 0, sizeof(wLegalMoves));
 
 	int k = 0;
 	for (int i=0; i<BoardArraySize; i++)
@@ -57,23 +58,9 @@ Board::Board()
 		// ¹w³]¦XªkÂI¬°¥hÃäªº©Ò¦³ÂI
 		if (i/BoardSize != 0 && i/BoardSize != BoardSize-1 && i%BoardSize != 0 && i%BoardSize != BoardSize-1)
 		{
-			LegalMoves[k] = i;
+			bLegalMoves[k] = i;
+			wLegalMoves[k] = i;
 			k++;
-		}
-	}
-
-	for (int i=0; i<BoardSize; i++)
-	{
-		for (int j=0; j<BoardSize; j++)
-		{
-			if ((i>=3) && (i<=RealBoardSize-2) && (j>=3) && (j<=RealBoardSize-2))
-			{
-				central_points[i*BoardSize+j] = 1;
-			}
-			else
-			{
-				central_points[i*BoardSize+j] = 0;
-			}
 		}
 	}
 
@@ -84,6 +71,10 @@ Board::Board()
 	max_adj_stones[(BoardSize - 1) * BoardSize - 2] = 2; 	// ¥k¤U¨¤
 
 	num_LegalMoves = k; 		                            //ªÅ½L­±¡A¨C¤@ÂI¬Ò¥i¤U
+	num_bLegalMoves = k;
+	num_wLegalMoves = k;
+	LegalMoves = bLegalMoves;
+	renew_legal = true;
 	KO_point = 0; 											//¥Nªí¥Ø«eµL§TÂI
 	color = BLACK;
 	hand_num = 1;
@@ -102,32 +93,29 @@ Board::Board(Board* b)
 	memcpy(string_id, b->string_id, sizeof(string_id));
 	memcpy(next_string_stone, b->next_string_stone, sizeof(next_string_stone));
 	memcpy(max_adj_stones, b->max_adj_stones, sizeof(max_adj_stones));
-	memcpy(LegalMoves, b->LegalMoves, sizeof(LegalMoves));
+	memcpy(bLegalMoves, b->bLegalMoves, sizeof(bLegalMoves));
+	memcpy(wLegalMoves, b->wLegalMoves, sizeof(wLegalMoves));
 	memcpy(Move_Sequence, b->Move_Sequence, sizeof(Move_Sequence));
-	memcpy(central_points, b->central_points, sizeof(central_points));
 
-	for (int i=0; i<BoardSize; i++)
-	{
-		for (int j=0; j<BoardSize; j++)
-		{
-			if ((i>=3) && (i<=RealBoardSize-2) && (j>=3) && (j<=RealBoardSize-2))
-			{
-				central_points[i*BoardSize+j] = 1;
-			}
-			else
-			{
-				central_points[i*BoardSize+j] = 0;
-			}
-		}
-	}
-
-	num_LegalMoves = b->num_LegalMoves;
 	KO_point = b->KO_point;
 	color = b->color;
 	hand_num = b->hand_num;
 	komi = b->komi;
 	last_move = b->last_move;
 	max_strings_id = b->max_strings_id;
+	num_LegalMoves = b->num_LegalMoves;
+	num_bLegalMoves = b->num_bLegalMoves;
+	num_wLegalMoves = b->num_wLegalMoves;
+	renew_legal = b->renew_legal;
+
+	if (color == BLACK)
+	{
+		LegalMoves = bLegalMoves;
+	}
+	else
+	{
+		LegalMoves = wLegalMoves;
+	}
 
 	srand(time(NULL));
 }
@@ -148,9 +136,9 @@ Board::Board(int* MSQ, int hn, float km)
 	memset(strings, 0, sizeof(strings));
 	memset(string_id, 0, sizeof(string_id));
 	memset(next_string_stone, 0, sizeof(next_string_stone));
-
 	memset(max_adj_stones, 0, sizeof(max_adj_stones));
-	memset(LegalMoves, 0, sizeof(LegalMoves));
+	memset(bLegalMoves, 0, sizeof(bLegalMoves));
+	memset(wLegalMoves, 0, sizeof(wLegalMoves));
 
 	int k = 0;
 	for (int i = 0; i < BoardArraySize; i++)
@@ -163,23 +151,9 @@ Board::Board(int* MSQ, int hn, float km)
 
 		if (i/BoardSize != 0 && i/BoardSize != BoardSize-1 && i%BoardSize != 0 && i%BoardSize != BoardSize-1)
 		{
-			LegalMoves[k] = i;
+			bLegalMoves[k] = i;
+			wLegalMoves[k] = i;
 			k++;
-		}
-	}
-
-	for (int i=0; i<BoardSize; i++)
-	{
-		for (int j=0; j<BoardSize; j++)
-		{
-			if ((i>=3) && (i<=RealBoardSize-2) && (j>=3) && (j<=RealBoardSize-2))
-			{
-				central_points[i*BoardSize+j] = 1;
-			}
-			else
-			{
-				central_points[i*BoardSize+j] = 0;
-			}
 		}
 	}
 
@@ -189,6 +163,10 @@ Board::Board(int* MSQ, int hn, float km)
 	max_adj_stones[BoardSize * (BoardSize - 1) - 2] = 2;
 
 	num_LegalMoves = k;
+	num_bLegalMoves = k;
+	num_wLegalMoves = k;
+	LegalMoves = bLegalMoves;
+	renew_legal = true;
 	KO_point = 0;
 	color = BLACK;
 	hand_num = 1;
@@ -261,15 +239,6 @@ int Board::select_Move(int hn)
     for(int i=0; i<num_LegalMoves; i++)
     {
     	is_Legal_Moves[LegalMoves[i]] = 1;
-
-        if (hand_num < Open_Step_Limit)
-        {
-            if (central_points[LegalMoves[i]] > 0)
-            {
-        		Urgency_Moves[LegalMoves[i]] += distance_score;
-        		total_urgency += distance_score;
-            }
-        }
     }
 
     // ´Ñ¦ê³Q¥s¦Y®É¡A¼W¥[¨ä®ðÂIªººò«æ­È¡A­nªø©Î´£¦Y
@@ -310,15 +279,15 @@ int Board::select_Move(int hn)
     		}
 
     		// Pattern 5 match
-    		hashcode_pattern5(LegalMoves[i], &pattern_code5);
+/*    		hashcode_pattern5(LegalMoves[i], &pattern_code5);
     		set<string>::iterator it;
     		if (color == BLACK)
     		{
     			it = Pattern5b.find(pattern_code5);
     			if (it != Pattern5b.end())
     			{
-    				Urgency_Moves[LegalMoves[i]] += pattern_score * 6 / 5;
-    				total_urgency += pattern_score * 6 / 5;
+    				Urgency_Moves[LegalMoves[i]] += pattern_score;
+    				total_urgency += pattern_score;
     			}
     		}
     		else
@@ -326,10 +295,10 @@ int Board::select_Move(int hn)
     			it = Pattern5w.find(pattern_code5);
     			if (it != Pattern5w.end())
     			{
-    				Urgency_Moves[LegalMoves[i]] += pattern_score * 6 / 5;
-    				total_urgency += pattern_score * 6 / 5;
+    				Urgency_Moves[LegalMoves[i]] += pattern_score;
+    				total_urgency += pattern_score;
     			}
-    		}
+    		}*/
 
         	if ((hn > 1) && (last_move != 0) && (distance(LegalMoves[i], last_move) <= 4))
         	{
@@ -375,14 +344,6 @@ int Board::select_urgency_moves(int *moves)
     for(int i=0; i<num_LegalMoves; i++) // During open stage, central points are urgent
     {
     	is_Legal_Moves[LegalMoves[i]] = 1;
-
-        if (hand_num <= Open_Step_Limit)
-        {
-            if (central_points[LegalMoves[i]] > 0)
-            {
-            	Urgency_Moves[LegalMoves[i]] = 1;
-            }
-        }
     }
 
 	for (int i=0; i<max_strings_id; i++)
@@ -462,7 +423,7 @@ int Board::select_urgency_moves(int *moves)
 
 bool Board::update_Board(int m)
 {
-	int num_captured, total_num_captured = 0, dead_point = 0, i= 0, nb = 0;
+	int num_captured = 0, total_num_captured = 0, dead_point = 0, i= 0, nb = 0;
 	KO_point = 0;
 	updated_strings_id.head = NULL;
 
@@ -592,7 +553,44 @@ bool Board::update_Board(int m)
 
 	// ¨Ì·Ó·s½L­±©M·sÃC¦â¨M©w¦Xªk¨B
 
-	decide_Legal();
+	if (total_num_captured == 0 && num_adj_stones(m) == 0)
+	{
+		if (renew_legal)
+		{
+			remove_Legal(num_bLegalMoves, bLegalMoves, m);
+			remove_Legal(num_wLegalMoves, wLegalMoves, m);
+			num_bLegalMoves--;
+			num_wLegalMoves--;
+
+			int adj_empty_points[4];
+			int num_adj_empty_points = get_adj_empty_points(m, adj_empty_points);
+
+			for (int i=0; i<num_adj_empty_points; i++)
+			{
+				if (!is_Legal(adj_empty_points[i], BLACK))
+				{
+					remove_Legal(num_bLegalMoves, bLegalMoves, adj_empty_points[i]);
+					num_bLegalMoves--;
+				}
+
+				if (!is_Legal(adj_empty_points[i], WHITE))
+				{
+					remove_Legal(num_wLegalMoves, wLegalMoves, adj_empty_points[i]);
+					num_wLegalMoves--;
+				}
+			}
+		}
+		else
+		{
+			decide_Legal();
+			renew_legal = true;
+		}
+	}
+	else
+	{
+		decide_Legal(); // according black or white
+		renew_legal = false;
+	}
 
 	return true;
 }
@@ -654,6 +652,15 @@ void Board::decide_Liberty(int p, int c, int* num, int* detected, int* lp) //­pº
 
 void Board::decide_Legal()
 {
+	if (color == BLACK)
+	{
+		LegalMoves = bLegalMoves;
+	}
+	else
+	{
+		LegalMoves = wLegalMoves;
+	}
+
 	int k = 0;
 
 	for (int i=BoardSize+1; i<BoardArraySize-BoardSize; i++)
@@ -663,6 +670,15 @@ void Board::decide_Legal()
 			LegalMoves[k] = i;
 			k++;
 		}
+	}
+
+	if (color == BLACK)
+	{
+		num_bLegalMoves = k;
+	}
+	else
+	{
+		num_wLegalMoves = k;
 	}
 
 	num_LegalMoves = k;
@@ -675,6 +691,26 @@ bool Board::is_Legal(int i)
 		if (num_adj_stones(i) == max_adj_stones[i]) // ©P³òµLªÅÂI
 		{
 			if (!is_Suicide(i) && !is_TrueEye(i)) // ¤£·|³y¦¨¦Û±þ¡B¤£¬O²´¦ì
+			{
+				return true;
+			}
+		}
+		else
+		{
+			return true; // ©P³ò¦³ªÅÂI
+		}
+	}
+
+	return false;
+}
+
+bool Board::is_Legal(int i, int c)
+{
+	if ((board[i] == EMPTY) && (i != KO_point)) // ªÅÂI¥B«D§TÂI
+	{
+		if (num_adj_stones(i) == max_adj_stones[i]) // ©P³òµLªÅÂI
+		{
+			if (!is_Suicide(i, c) && !is_TrueEye(i,c)) // ¤£·|³y¦¨¦Û±þ¡B¤£¬O²´¦ì
 			{
 				return true;
 			}
@@ -706,6 +742,36 @@ bool Board::is_Suicide(int p) //§PÂ_¸¨¤l©ó¦¹ÂI¬O§_¬°¦Û±þ:1.®Ç¦³¤@®ð¤§¼Ä¦ê¡A«h¥i¤
 			}
 		}
 		else if (board[nb] == color) //®Ç¬°§Ú¤è´Ñ¦ê
+		{
+			if (strings[string_id[nb]].liberty > 1)
+			{
+				return false; // ®Ç¦³2®ð¤§§Ú¤è´Ñ¦ê¡A«D¦Û±þ
+			}
+		}
+	}
+
+	//3.­Y®Ç¤§¼Ä¦ê¬Ò¦³¤G®ð¡A¥B§Ú¤è´Ñ¦ê¬Ò¶È¤@®ð¡A«h¤£¥i¤U
+	return true;
+}
+
+bool Board::is_Suicide(int p, int c) //§PÂ_¸¨¤l©ó¦¹ÂI¬O§_¬°¦Û±þ:1.®Ç¦³¤@®ð¤§¼Ä¦ê¡A«h¥i¤U. 2.­YµL¡A«h®Ç¦³2®ð¤§§Ú¦ê¡A¥ç¥i¤U
+{
+	int nb = 0;
+	for (int i=0; i<4; i++)
+	{
+		nb = p + adj_dir[i];
+		if (board[nb] == EMPTY) // ®ÇÃä¦³ªÅÂI¡A«D¦Û±þ
+		{
+			return false;
+		}
+		else if (board[nb] == -c) //®Ç¬°¼Ä¤è´Ñ¦ê
+		{
+			if (strings[string_id[nb]].liberty == 1)
+			{
+				return false; // ®Ç¦³1®ð¤§¼Ä¦ê¥i´£¤l¡A«D¦Û±þ
+			}
+		}
+		else if (board[nb] == c) //®Ç¬°§Ú¤è´Ñ¦ê
 		{
 			if (strings[string_id[nb]].liberty > 1)
 			{
@@ -752,6 +818,42 @@ bool Board::is_Eye(int p)	// ÂIp¬O§_¬°(¼È®É)²´
 		return false;
 	}
 }
+
+bool Board::is_Eye(int p, int c)	// ÂIp¬O§_¬°(¼È®É)²´
+{
+	int nb = 0, num_friends = 0;
+	for (int i = 0; i < 4; i++)
+	{
+		nb = p + adj_dir[i];
+		if (board[nb] == c)
+		{
+			if (strings[string_id[nb]].liberty == 1)
+			{
+				return false;
+			}
+			num_friends++;
+		}
+	}
+
+	int num_edges = num_adj_edge(p);	//¨ú±oÃä¬É¼Æ¶q
+	if (num_edges == 0 && num_friends == 4)	//¤¤¶¡(¼È®É)²´:¦Ü¤Ö4Áû
+	{
+		return true;
+	}
+	else if (num_edges == 1 && num_friends == 3)	//Ãä(¼È®É)²´:¦Ü¤Ö3Áû
+	{
+		return true;
+	}
+	else if (num_edges == 2 && num_friends == 2)	//¨¤(¼È®É)²´:¦Ü¤Ö2Áû
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
 bool Board::is_TrueEye(int p) //ÂIp¬O§_¬°(¯u)²´:¾F©~³£¦PÃC¦â¥B®ðÂI³£¤j©ó1
 {
 	int nb = 0, num_friends = 0, temp_eyes= 0;
@@ -770,6 +872,49 @@ bool Board::is_TrueEye(int p) //ÂIp¬O§_¬°(¯u)²´:¾F©~³£¦PÃC¦â¥B®ðÂI³£¤j©ó1
 		else if(board[nb] == EMPTY)	//ªÅÂI¥i¯à¬O°²²´
 		{
 			if (is_Eye(nb))
+			{
+				temp_eyes++;
+			}
+		}
+	}
+
+	int num_edges = num_adj_edge(p);	//¨ú±oÃä¬É¼Æ¶q¡A§PÂ_¦¹ÂI¦ì©óÃä¡B¨¤©Î¬O¤¤¶¡
+	if (num_edges == 0 && (num_friends + temp_eyes) >= 7)//¤¤¶¡¯u²´:¦Ü¤Ö7Áû
+	{
+		return true;
+	}
+	else if (num_edges == 1 && (num_friends + temp_eyes) == 5)//Ãä¯u²´:¦Ü¤Ö5Áû
+	{
+		return true;
+	}
+	else if (num_edges == 2 && (num_friends + temp_eyes) == 3)//¨¤¯u²´:¦Ü¤Ö3Áû
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+bool Board::is_TrueEye(int p, int c) //ÂIp¬O§_¬°(¯u)²´:¾F©~³£¦PÃC¦â¥B®ðÂI³£¤j©ó1
+{
+	int nb = 0, num_friends = 0, temp_eyes= 0;
+	for(int i = 0; i<8; i++)
+	{
+		nb = p + all_dir[i];
+		if (board[nb] == c)
+		{
+			if (strings[string_id[nb]].liberty == 1)
+			{
+				return false;
+			}
+
+			num_friends++;
+		}
+		else if(board[nb] == EMPTY)	//ªÅÂI¥i¯à¬O°²²´
+		{
+			if (is_Eye(nb, c))
 			{
 				temp_eyes++;
 			}
@@ -967,6 +1112,41 @@ int Board::num_adj_edge(int p)
 	}
 
 	return num_edge;
+}
+
+int Board::get_adj_empty_points(int p, int *points)
+{
+	int nb = 0, num_empty = 0;
+	for (int i=0; i<4; i++)
+	{
+		nb = p + adj_dir[i];
+		if (board[nb] == EMPTY)
+		{
+			points[num_empty] = nb;
+			num_empty++;
+		}
+	}
+
+	return num_empty;
+}
+
+void Board::remove_Legal(int num_moves, int *moves, int p)
+{
+	bool found = false;
+
+	for (int i=0; i<num_moves; i++)
+	{
+		if (p == moves[i])
+		{
+			found = true;
+			continue;
+		}
+
+		if (found)
+		{
+			moves[i-1] = moves[i];
+		}
+	}
 }
 
 void Board::show_Board()

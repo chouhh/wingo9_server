@@ -53,8 +53,6 @@ extern float UCT_Komi ;
 extern int ExEValue ;       //UCB°Ñ¼Æ
 
 extern bool Patterns_3[PATTERN_LIMIT];
-extern bool Patterns_5b[4][PATTERN_LIMIT];
-extern bool Patterns_5w[4][PATTERN_LIMIT];
 
 extern  set<string> Pattern5b;
 extern  set<string> Pattern5w;
